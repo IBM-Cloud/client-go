@@ -83,7 +83,8 @@ func (c *Config) TransportConfig() (*transport.Config, error) {
 			Groups:   c.Impersonate.Groups,
 			Extra:    c.Impersonate.Extra,
 		},
-		Dial: c.Dial,
+		Dial:                  c.Dial,
+		DisableTransportCache: c.DisableTransportCache,
 	}
 
 	if c.ExecProvider != nil && c.AuthProvider != nil {
