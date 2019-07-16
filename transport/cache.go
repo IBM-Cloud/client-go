@@ -89,14 +89,17 @@ func (c *tlsTransportCache) get(config *Config) (http.RoundTripper, error) {
 		}).DialContext
 	}
 	// Cache a single transport for these options
-	c.transports[key] = utilnet.SetTransportDefaults(&http.Transport{
+	transport := utilnet.SetTransportDefaults(&http.Transport{
 		Proxy:               http.ProxyFromEnvironment,
 		TLSHandshakeTimeout: 10 * time.Second,
 		TLSClientConfig:     tlsConfig,
 		MaxIdleConnsPerHost: idleConnsPerHost,
 		DialContext:         dial,
 	})
-	return c.transports[key], nil
+	if !config.DisableTransportCache {
+		c.transports[key] = transport
+	}
+	return transport, nil
 }
 
 // tlsConfigKey returns a unique key for tls.Config objects returned from TLSConfigFor

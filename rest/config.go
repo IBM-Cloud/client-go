@@ -115,6 +115,9 @@ type Config struct {
 	// Dial specifies the dial function for creating unencrypted TCP connections.
 	Dial func(ctx context.Context, network, address string) (net.Conn, error)
 
+	// DisableTransportCache is set to true when caching should be disabled
+	DisableTransportCache bool
+
 	// Version forces a specific version to be used (if registered)
 	// Do we need this?
 	// Version string
