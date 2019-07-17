@@ -24,6 +24,72 @@ import (
 	"testing"
 )
 
+func TestDisableCache(t *testing.T) {
+
+	tlsCfg1 := &Config{
+		TLS: TLSConfig{CAData: []byte{1}},
+	}
+	tlsCfg2 := &Config{
+		TLS:                   TLSConfig{CAData: []byte{2}},
+		DisableTransportCache: true,
+	}
+
+	// expected to be cached and create a new entry
+	transport1, err := tlsCache.get(tlsCfg1)
+	if err != nil {
+		t.Errorf("Unexpected error getting transport: %v", err)
+	}
+	if transport1 == nil {
+		t.Error("Unexpected nil transport")
+	}
+	if len(tlsCache.transports) != 1 {
+		t.Errorf("Expected cache to be of size 1, but it was %v", len(tlsCache.transports))
+	}
+
+	// retrieve existing cache entry
+	transport2, err := tlsCache.get(tlsCfg1)
+	if err != nil {
+		t.Errorf("Unexpected error getting transport: %v", err)
+	}
+	if transport2 == nil {
+		t.Error("Unexpected nil transport")
+	}
+	if len(tlsCache.transports) != 1 {
+		t.Errorf("Expected cache to be of size 1, but it was %v", len(tlsCache.transports))
+	}
+	if transport1 != transport2 {
+		t.Errorf("cached transports not equal")
+	}
+
+	// disable caching for same key parameters
+	tlsCfg1.DisableTransportCache = true
+	transport3, err := tlsCache.get(tlsCfg1)
+	if err != nil {
+		t.Errorf("Unexpected error getting transport: %v", err)
+	}
+	if transport3 == nil {
+		t.Error("Unexpected nil transport")
+	}
+	if len(tlsCache.transports) != 1 {
+		t.Errorf("Expected cache to be of size 1, but it was %v", len(tlsCache.transports))
+	}
+	if transport1 == transport3 {
+		t.Errorf("transports should not be equal when caching is disabled")
+	}
+
+	// key with new parameters, caching disabled
+	transport4, err := tlsCache.get(tlsCfg2)
+	if err != nil {
+		t.Errorf("Unexpected error getting transport: %v", err)
+	}
+	if transport4 == nil {
+		t.Error("Unexpected nil transport")
+	}
+	if len(tlsCache.transports) != 1 {
+		t.Errorf("Expected cache to be of size 1, but it was %v", len(tlsCache.transports))
+	}
+}
+
 func TestTLSConfigKey(t *testing.T) {
 	// Make sure config fields that don't affect the tls config don't affect the cache key
 	identicalConfigurations := map[string]*Config{
