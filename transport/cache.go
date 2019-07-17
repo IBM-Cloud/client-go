@@ -57,18 +57,25 @@ func (t tlsCacheKey) String() string {
 }
 
 func (c *tlsTransportCache) get(config *Config) (http.RoundTripper, error) {
-	key, err := tlsConfigKey(config)
-	if err != nil {
-		return nil, err
-	}
 
-	// Ensure we only create a single transport for the given TLS options
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	// retrieve existing transport if caching is enabled
+	var key tlsCacheKey
+	var err error
+	if !config.DisableTransportCache {
 
-	// See if we already have a custom transport for this config
-	if t, ok := c.transports[key]; ok {
-		return t, nil
+		key, err = tlsConfigKey(config)
+		if err != nil {
+			return nil, err
+		}
+
+		// Ensure we only create a single transport for the given TLS options
+		c.mu.Lock()
+		defer c.mu.Unlock()
+
+		// See if we already have a custom transport for this config
+		if t, ok := c.transports[key]; ok {
+			return t, nil
+		}
 	}
 
 	// Get the TLS options for this client config
@@ -96,6 +103,8 @@ func (c *tlsTransportCache) get(config *Config) (http.RoundTripper, error) {
 		MaxIdleConnsPerHost: idleConnsPerHost,
 		DialContext:         dial,
 	})
+
+	// store the transport if caching is enabled
 	if !config.DisableTransportCache {
 		c.transports[key] = transport
 	}
