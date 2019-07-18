@@ -68,6 +68,9 @@ type Config struct {
 
 	// Dial specifies the dial function for creating unencrypted TCP connections.
 	Dial func(ctx context.Context, network, address string) (net.Conn, error)
+
+	// DisableTransportCache is set to true when caching should be disabled
+	DisableTransportCache bool
 }
 
 // ImpersonationConfig has all the available impersonation options
@@ -100,7 +103,7 @@ func (c *Config) HasCertAuth() bool {
 	return (len(c.TLS.CertData) != 0 || len(c.TLS.CertFile) != 0) && (len(c.TLS.KeyData) != 0 || len(c.TLS.KeyFile) != 0)
 }
 
-// HasCertCallbacks returns whether the configuration has certificate callback or not.
+// HasCertCallback returns whether the configuration has certificate callback or not.
 func (c *Config) HasCertCallback() bool {
 	return c.TLS.GetCert != nil
 }
